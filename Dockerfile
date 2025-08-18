@@ -13,6 +13,7 @@
 ## Run the JAR file
 #ENTRYPOINT ["java", "-jar", "app.jar"]
 
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim
+RUN apt-get update && apt-get install -y curl
 COPY target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "/app.jar"]
