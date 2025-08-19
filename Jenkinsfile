@@ -39,7 +39,7 @@ pipeline {
 
         stage('Deploy with Docker Compose') {
             steps {
-                dir('..') { // 👈 this navigates to LMS/, the parent folder
+                dir('../LMS') { // 👈 this navigates to LMS/, the parent folder
                   sh 'docker-compose -f docker-compose.jenkins.yml down || true'
                   sh 'docker-compose -f docker-compose.jenkins.yml up -d'
                 }
