@@ -1,35 +1,49 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = 'mahimadod/lms-discovery-service'
+        IMAGE_TAG = 'latest'
+    }
+
     stages {
-        stage('Build JAR') {
+        stage('Checkout') {
             steps {
-                sh 'mvn clean package'
+                git credentialsId: 'github-creds', url: 'https://github.com/mahimadod/lms-discovery-service.git'
             }
+        }
+
+        stage('Build JAR') {
+                    steps {
+                        sh 'mvn clean package'
+                    }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("mahimadod/lms-discovery-service:latest")
+                    dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
-                    sh 'docker push mahimadod/lms-discovery-service:latest'
+                script {
+                    docker.withRegistry('', 'dockerhub-creds') {
+                        dockerImage.push()
+                    }
                 }
             }
         }
 
         stage('Deploy with Docker Compose') {
             steps {
-                dir('../') {
-                    sh 'docker-compose -f docker-compose.jenkins.yml down || true'
-                    sh 'docker-compose -f docker-compose.jenkins.yml up -d'
-                }
+                sh '''
+                docker-compose down
+                docker-compose pull
+                docker-compose up -d --build
+                '''
             }
         }
     }
