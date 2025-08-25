@@ -1,10 +1,9 @@
 pipeline {
-    agent {
-            docker {
-                image 'maven:3.8.6-openjdk-17'
-            }
-        }
+    agent any
 
+        tools {
+            maven 'Maven_3.8.6'
+        }
     environment {
         IMAGE_NAME = 'mahimadod/lms-discovery-service'  // change per repo
         IMAGE_TAG = "${env.BUILD_NUMBER}"               // unique per build
