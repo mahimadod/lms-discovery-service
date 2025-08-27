@@ -9,7 +9,17 @@ pipeline {
     }
 
     stages {
+        stage('Clean Workspace') {
+                    steps {
+                        deleteDir()
+                    }
+                }
 
+        stage('Checkout') {
+            steps {
+                git branch: 'master', url: 'https://github.com/mahimadod/lms-discovery-service.git'
+            }
+        }
         stage('Build & Test') {
             steps {
                 // Properly inject JAVA_HOME and MAVEN_HOME into the shell PATH
