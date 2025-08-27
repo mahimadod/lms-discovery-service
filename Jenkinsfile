@@ -1,73 +1,57 @@
 pipeline {
     agent any
 
-        tools {
-            maven 'Maven_3.8.6'
-        }
     environment {
-        IMAGE_NAME = 'mahimadod/lms-discovery-service'  // change per repo
-        IMAGE_TAG = "${env.BUILD_NUMBER}"               // unique per build
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        DOCKER_IMAGE = "mahimadod/lms-discovery-service"
+        JAVA_HOME = tool name: 'JDK17', type: 'jdk'
+        MAVEN_HOME = tool name: 'Maven3.9.9', type: 'maven'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'master', url: 'https://github.com/mahimadod/lms-discovery-service.git'
             }
         }
 
-        stage('Build JAR') {
+        stage('Build & Test') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                withEnv(["JAVA_HOME=${env.JAVA_HOME}", "PATH+MAVEN=${env.MAVEN_HOME}/bin"]) {
+                    sh 'mvn clean install'
+                }
             }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                    archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
                 }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Docker Build & Push') {
             steps {
                 script {
-                    docker.withRegistry('', 'dockerhub-creds') {
-                        dockerImage.push()
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
+                        def customImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                        customImage.push()
+                        // Also tag latest and push
+                        customImage.tag('latest')
+                        customImage.push('latest')
                     }
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy') {
             steps {
-                script {
-                    // Replace with path to your k8s yaml for this service in repo
-                    sh "kubectl apply -f k8s/deployment.yaml"
-                }
+                echo 'Deploying Docker container...'
+                // Example: run docker container on Jenkins node (adjust as needed)
+                sh '''
+                docker rm -f lms-discovery || true
+                docker run -d --name lms-discovery -p 8761:8761 ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                '''
             }
-        }
-
-        stage('Verify Deployment') {
-            steps {
-                script {
-                    // Wait for pod rollout and verify
-                    sh "kubectl rollout status deployment/${env.SERVICE_NAME} --timeout=120s"
-
-                    // Optional: Run a basic health check curl, change port/path accordingly
-                    sh '''
-                      POD_NAME=$(kubectl get pods -l app=${SERVICE_NAME} -o jsonpath="{.items[0].metadata.name}")
-                      kubectl exec $POD_NAME -- curl -f http://localhost:8080/actuator/health
-                    '''
-                }
-            }
-        }
-    }
-
-    post {
-        failure {
-            echo "Build failed"
         }
     }
 }
