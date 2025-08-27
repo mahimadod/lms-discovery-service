@@ -17,7 +17,12 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                withEnv(["JAVA_HOME=${env.JAVA_HOME}", "PATH+MAVEN=${env.MAVEN_HOME}/bin"]) {
+                // Properly inject JAVA_HOME and MAVEN_HOME into the shell PATH
+                withEnv([
+                    "JAVA_HOME=${env.JAVA_HOME}",
+                    "MAVEN_HOME=${env.MAVEN_HOME}",
+                    "PATH=${env.JAVA_HOME}/bin:${env.MAVEN_HOME}/bin:$PATH"
+                ]) {
                     sh 'mvn clean install'
                 }
             }
@@ -35,7 +40,6 @@ pipeline {
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
                         def customImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
                         customImage.push()
-                        // Also tag latest and push
                         customImage.tag('latest')
                         customImage.push('latest')
                     }
@@ -46,10 +50,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying Docker container...'
-                // Example: run docker container on Jenkins node (adjust as needed)
                 sh '''
-                docker rm -f lms-discovery || true
-                docker run -d --name lms-discovery -p 8761:8761 ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                    docker rm -f lms-discovery || true
+                    docker run -d --name lms-discovery -p 8761:8761 ${DOCKER_IMAGE}:${BUILD_NUMBER}
                 '''
             }
         }
