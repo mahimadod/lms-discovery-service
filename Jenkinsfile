@@ -14,7 +14,9 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/mahimadod/lms-discovery-service.git'
             }
         }
-
+        tools {
+          git 'Default' // or the name you configured in Global Tool Configuration
+        }
         stage('Build & Test') {
             steps {
                 // Properly inject JAVA_HOME and MAVEN_HOME into the shell PATH
