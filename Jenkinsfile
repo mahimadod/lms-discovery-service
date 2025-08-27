@@ -8,10 +8,6 @@ pipeline {
         MAVEN_HOME = tool name: 'Maven3.9.9', type: 'maven'
     }
 
-    tools {
-            git 'Default' // This is now in the correct location
-    }
-
     stages {
         stage('Checkout') {
             steps {
