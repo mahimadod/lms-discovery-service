@@ -8,6 +8,8 @@ pipeline {
         MAVEN_HOME = tool name: 'Maven3.9.9', type: 'maven'
     }
 
+    stages {
+
         stage('Build & Test') {
             steps {
                 // Properly inject JAVA_HOME and MAVEN_HOME into the shell PATH
