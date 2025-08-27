@@ -8,13 +8,6 @@ pipeline {
         MAVEN_HOME = tool name: 'Maven3.9.9', type: 'maven'
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'master', url: 'https://github.com/mahimadod/lms-discovery-service.git'
-            }
-        }
-
         stage('Build & Test') {
             steps {
                 // Properly inject JAVA_HOME and MAVEN_HOME into the shell PATH
