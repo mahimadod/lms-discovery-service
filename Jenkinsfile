@@ -6,6 +6,7 @@ pipeline {
         DOCKER_IMAGE = "mahimadod/lms-discovery-service"
         JAVA_HOME = tool name: 'JDK17', type: 'jdk'
         MAVEN_HOME = tool name: 'Maven3.9.9', type: 'maven'
+		 SONAR_TOKEN = credentials('sonarqube-token')
     }
 
     tools {
@@ -24,6 +25,7 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/mahimadod/lms-discovery-service.git'
             }
         }
+
          stage('Build & Test') {
                     steps {
                         withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
@@ -48,6 +50,19 @@ pipeline {
                         }
                     }
                 }
+
+stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    bat """
+                        mvn clean verify sonar:sonar ^
+                            -Dsonar.projectKey=lms-discovery-service ^
+                            -Dsonar.host.url=%SONAR_HOST_URL% ^
+                            -Dsonar.login=%SONAR_TOKEN%
+                    """
+                }
+            }
+        }
 
         stage('Docker Build & Push') {
             steps {
