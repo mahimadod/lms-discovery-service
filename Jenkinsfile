@@ -64,11 +64,11 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo 'Deploying Docker container...'
-                sh '''
-                    docker rm -f lms-discovery || true
-                    docker run -d --name lms-discovery --network lms-network -p 8761:8761 ${DOCKER_IMAGE}:${BUILD_NUMBER}
-                '''
+                   echo 'Deploying Docker container...'
+                        bat """
+                            docker rm -f lms-discovery || exit 0
+                            docker run -d --name lms-discovery --network lms-network -p 8761:8761 ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                            """
             }
         }
     }
