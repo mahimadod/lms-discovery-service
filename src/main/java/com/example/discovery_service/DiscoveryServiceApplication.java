@@ -1,5 +1,6 @@
 package com.example.discovery_service;
 
+import jakarta.annotation.PostConstruct;
 import org.slf4j.MDC;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,12 +13,10 @@ import java.util.List;
 @EnableEurekaServer
 public class DiscoveryServiceApplication {
 	public static void main(String[] args) {
-		org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscoveryServiceApplication.class);
-		//MDC.put("service", "discovery-service");
-		SpringApplication.run(DiscoveryServiceApplication.class, args);
-		logger.info("Application started : Discovery service" );
-		logger.info("✅ Hello from DiscoveryService! Encoder test.");
-
+			SpringApplication.run(DiscoveryServiceApplication.class, args);
 	}
-
+	@PostConstruct
+	public void initMDC() {
+		MDC.put("service", "discovery-service");
+	}
 }

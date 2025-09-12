@@ -12,7 +12,6 @@
                 <stackTrace />
                 <context />
                 <mdc />
-                <customFields>{"service":"discovery-service", "env":"check-encoder"}</customFields>
             </providers>
         </encoder>
     </appender>
